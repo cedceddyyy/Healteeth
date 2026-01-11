@@ -1,0 +1,26 @@
+{% extends "base2.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card p-4 table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Dentist Name</th>
+                    <th>Email</th>
+                    <th>Branch Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dentist in dentists %}
+                <tr>
+                    <td style="font-weight: 500;">{{ dentist.DENTIST_FULLNAME }}</td>
+                    <td class="text-medium">{{ dentist.DENTIST_EMAIL }}</td>
+                    <td><span class="tag tag-primary">{{ dentist.BRANCH_LOC }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

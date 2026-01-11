@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointment Form{% endblock %}
+
+{% block content %}
+<h1>Appointment Details</h1>
+
+{% if service and branch and schedule %}
+    <p><strong>Service:</strong> {{ service.SERVICE_NAME }}</p>
+    <p><strong>Branch:</strong> {{ branch.BRANCH_NAME }}</p>
+    <p><strong>Schedule:</strong> {{ schedule.SCHED_SLOTNUM }} - {{ schedule.SCHED_DATE }}</p>
+    <p><strong>Customer Name:</strong> {{ customer.CUST_FNAME }} {{ customer.CUST_LNAME }}</p>
+{% else %}
+    <p>Some data is missing, please go back and select the necessary options.</p>
+{% endif %}
+
+<!-- Optional: Form to finalize the appointment or make further changes -->
+<form method="POST" action="{{ url_for('appointment_confirmation') }}">
+    <!-- Additional fields, such as teeth extraction, etc., can go here -->
+    <button type="submit" class="w3-button w3-green">Confirm Appointment</button>
+</form>
+{% endblock %}

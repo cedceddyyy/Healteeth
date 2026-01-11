@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="card p-4">
+        <h2 class="mb-4" style="border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Customer Information</h2>
+
+        <form action="{{ url_for('update_customer_info') }}" method="POST">
+            <!-- Hidden fields for schedule -->
+            <input type="hidden" name="sched_id" value="{{ schedule.sched_id }}">
+            <input type="hidden" name="sched_slotnum" value="{{ schedule.sched_slotnum }}">
+            <input type="hidden" name="sched_datetime" value="{{ schedule.sched_datetime }}">
+            <input type="hidden" name="cust_id" value="{{ customer.CUST_ID }}">
+
+            <div class="grid grid-cols-3">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input class="form-control" type="text" name="first_name" value="{{ customer.CUST_FNAME }}"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Middle Name</label>
+                    <input class="form-control" type="text" name="middle_name" value="{{ customer.CUST_MNAME }}"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input class="form-control" type="text" name="last_name" value="{{ customer.CUST_LNAME }}" required>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2">
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <select class="form-control" name="gender" required>
+                        <option value="M" {% if customer.CUST_GENDER=='M' %}selected{% endif %}>Male</option>
+                        <option value="F" {% if customer.CUST_GENDER=='F' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Birth Date</label>
+                    <input class="form-control" type="date" name="birthdate" value="{{ customer.CUST_BDATE }}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <input class="form-control" type="text" name="address" value="{{ customer.CUST_ADDRESS }}" required>
+            </div>
+
+            <div class="grid grid-cols-2">
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" type="tel" name="phone" value="{{ customer.CUST_PHONE }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" type="email" name="email" value="{{ customer.CUST_EMAIL }}" required>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-4">
+                <button type="submit" class="btn btn-primary">Update Information</button>
+                <a href="{{ url_for('appointment_form') }}" class="btn btn-success"
+                    style="background-color: var(--success-color); color: white;">Proceed to Appointment</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

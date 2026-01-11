@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-error">
+        <ul style="list-style: none; padding: 0;">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1">
+        {% for schedule in schedules %}
+        <div class="card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h4 style="color: var(--primary-color);">SLOT {{ schedule.SCHED_SLOTNUM }}</h4>
+                    <p class="text-medium"><i class="material-icons"
+                            style="font-size: 1rem; vertical-align: text-bottom;">event</i> {{ schedule.SCHEDULE_DATE }}
+                    </p>
+                    <p class="text-medium"><i class="material-icons"
+                            style="font-size: 1rem; vertical-align: text-bottom;">schedule</i> {{ schedule.SCHEDULE_TIME
+                        }}</p>
+                </div>
+                <button type="button" class="btn btn-primary"
+                    onclick="openModal('{{ schedule.SCHED_ID }}', '{{ schedule.SCHED_SLOTNUM }}', '{{ schedule.SCHEDULE_DATE }} {{ schedule.SCHEDULE_TIME }}')">
+                    Select Slot
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- User Selection Modal -->
+<div id="userInput" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Personal Information</h3>
+            <span onclick="closeModal()" class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="/add_customer">
+                <input type="hidden" id="sched-id" name="sched_id">
+                <input type="hidden" id="sched-slotnum" name="sched_slotnum">
+                <input type="hidden" id="sched-datetime" name="sched_datetime">
+
+                <div class="grid grid-cols-2" style="gap: var(--spacing-sm);">
+                    <div class="form-group">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" name="first_name" id="first_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="middle_name" class="form-label">Middle Name</label>
+                        <input type="text" name="middle_name" id="middle_name" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name" class="form-label">Last Name</label>
+                    <input type="text" name="last_name" id="last_name" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <div class="flex items-center" style="gap: 1rem;">
+                        <label><input type="radio" name="gender" value="M" required> Male</label>
+                        <label><input type="radio" name="gender" value="F" required> Female</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address" class="form-label">Address</label>
+                    <input type="text" name="address" id="address" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" class="form-label">Phone</label>
+                    <input type="text" name="phone" id="phone" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" name="email" id="email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="birthdate" class="form-label">Birthdate</label>
+                    <input type="date" name="birthdate" id="birthdate" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(schedId, slotNum, schedDatetime) {
+        document.getElementById('userInput').style.display = 'block';
+        document.getElementById('sched-id').value = schedId;
+        document.getElementById('sched-slotnum').value = slotNum;
+        document.getElementById('sched-datetime').value = schedDatetime;
+    }
+    function closeModal() {
+        document.getElementById('userInput').style.display = 'none';
+    }
+
+    window.onclick = function (event) {
+        var modal = document.getElementById('userInput');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+{% endblock %}

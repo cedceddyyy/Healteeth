@@ -1,0 +1,264 @@
+{% extends "base2.html" %}
+
+{% block content %}
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="flex justify-between items-center mb-4">
+        <div class="flex" style="gap: 0.5rem;">
+            {% for branch in branches %}
+            <a href="{{ url_for('schedules', branch_id=branch['BRANCH_ID']) }}"
+                class="btn {{ 'btn-primary' if branch['BRANCH_ID'] == selected_branch else 'btn-secondary' }}">
+                {{ branch['BRANCH_LOC'] }}
+            </a>
+            {% endfor %}
+        </div>
+        <button onclick="document.getElementById('addScheduleModal').style.display='block'" class="btn btn-primary">
+            + Add Schedule
+        </button>
+    </div>
+
+    <!-- Active Schedules Table -->
+    <h3 class="mb-4 text-medium">Active Schedules</h3>
+    {% if schedules %}
+    <div class="card p-4 table-container mb-4">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Slot</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Branch</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schedule in schedules %}
+                <tr>
+                    <td>{{ schedule['SCHED_ID'] }}</td>
+                    <td>{{ schedule['SCHED_SLOTNUM'] }}</td>
+                    <td>{{ schedule['SCHEDULE_DATE'] }}</td>
+                    <td>{{ schedule['SCHEDULE_TIME'] }}</td>
+                    <td>{{ schedule['BRANCH_LOC'] }}</td>
+                    <td>
+                        <div class="flex" style="gap: 0.5rem;">
+                            <button onclick='openEditModal({
+                                        "SCHED_ID": "{{ schedule.SCHED_ID }}",
+                                        "SCHEDULE_DATE": "{{ schedule.SCHEDULE_DATE }}",
+                                        "SCHEDULE_TIME": "{{ schedule.SCHEDULE_TIME }}",
+                                        "SCHED_SLOTNUM": "{{ schedule.SCHED_SLOTNUM }}"
+                                    })' class="btn btn-secondary" style="padding: 0.25rem 0.5rem;">Edit</button>
+
+                            <button onclick="confirmDelete({{ schedule.SCHED_ID }})" class="btn btn-danger"
+                                style="padding: 0.25rem 0.5rem;">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert" style="background-color: #f9fafb;">No active schedules.</div>
+    {% endif %}
+
+    <!-- Inactive Schedules Table -->
+    <h3 class="mb-4 text-medium">Inactive Schedules</h3>
+    {% if inactive_schedules %}
+    <div class="card p-4 table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Slot</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Branch</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schedule in inactive_schedules %}
+                <tr>
+                    <td>{{ schedule['SCHED_ID'] }}</td>
+                    <td>{{ schedule['SCHED_SLOTNUM'] }}</td>
+                    <td>{{ schedule['SCHEDULE_DATE'] }}</td>
+                    <td>{{ schedule['SCHEDULE_TIME'] }}</td>
+                    <td>{{ schedule['BRANCH_LOC'] }}</td>
+                    <td><span class="tag tag-warning">{{ schedule['STATUS'] }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert" style="background-color: #f9fafb;">No inactive schedules.</div>
+    {% endif %}
+
+    <!-- Modals -->
+    <!-- Add Schedule Modal -->
+    <div id="addScheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Schedule</h3>
+                <span onclick="document.getElementById('addScheduleModal').style.display='none'"
+                    class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_schedule') }}" method="POST">
+                    <div class="form-group">
+                        <label for="branch_id" class="form-label">Branch</label>
+                        <select id="branch_id" name="branch_id" class="form-control">
+                            {% for branch in branches %}
+                            <option value="{{ branch['BRANCH_ID'] }}" {% if branch['BRANCH_ID']==branch_id %}selected{%
+                                endif %}>{{ branch.BRANCH_LOC }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="schedule_date" class="form-label">Date</label>
+                        <input type="datetime-local" id="schedule_date" name="schedule_date" class="form-control"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="schedule_slot" class="form-label">Slot Number</label>
+                        <input type="text" id="schedule_slot" name="schedule_slot" class="form-control" required>
+                    </div>
+                    <div class="mt-4 flex justify-between">
+                        <button type="button" onclick="document.getElementById('addScheduleModal').style.display='none'"
+                            class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Schedule</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Schedule Modal -->
+    <div id="editScheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Schedule</h3>
+                <span onclick="document.getElementById('editScheduleModal').style.display='none'"
+                    class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editScheduleForm" method="POST">
+                    <input type="hidden" id="edit_schedule_id" name="schedule_id">
+
+                    <div class="form-group">
+                        <label for="edit_schedule_date" class="form-label">Date</label>
+                        <input type="datetime-local" id="edit_schedule_date" name="schedule_date" class="form-control"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_schedule_slot" class="form-label">Slot Number</label>
+                        <input type="number" id="edit_schedule_slot" name="schedule_slot" class="form-control" required>
+                    </div>
+
+                    <div class="mt-4 flex justify-between">
+                        <button type="button"
+                            onclick="document.getElementById('editScheduleModal').style.display='none'"
+                            class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Schedule</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEditModal(schedule) {
+        try {
+            const dateStr = schedule.SCHEDULE_DATE;
+            const timeStr = schedule.SCHEDULE_TIME;
+
+            const dateParts = dateStr.split(' ');
+            const month = new Date(Date.parse(dateParts[0] + " 1, 2000")).getMonth() + 1;
+            const day = parseInt(dateParts[1].replace(',', ''));
+            const year = parseInt(dateParts[2]);
+
+            const timeParts = timeStr.match(/(\d+):(\d+) (AM|PM)/);
+            let hours = parseInt(timeParts[1]);
+            const minutes = timeParts[2];
+            const period = timeParts[3];
+
+            if (period === 'PM' && hours < 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+
+            const formattedDateTime = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes}`;
+
+            document.getElementById('edit_schedule_id').value = schedule.SCHED_ID;
+            document.getElementById('edit_schedule_date').value = formattedDateTime;
+            document.getElementById('edit_schedule_slot').value = schedule.SCHED_SLOTNUM;
+
+            document.getElementById('editScheduleModal').style.display = 'block';
+        } catch (error) {
+            console.error('Error in openEditModal:', error);
+            alert('Error opening edit modal');
+        }
+    }
+
+    function confirmDelete(scheduleId) {
+        if (confirm("Are you sure you want to delete this schedule?")) {
+            fetch(`/delete_schedule/${scheduleId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Error deleting schedule");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Error deleting schedule");
+                });
+        }
+    }
+
+    document.getElementById('editScheduleForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('/update_schedule', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    throw new Error('Failed to update schedule');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating schedule');
+            });
+    });
+
+    // Close modals when clicking outside is already handled via w3.css usually or custom script.
+    // Adding custom script for these modals if not present globally
+    window.onclick = function (event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none";
+        }
+    }
+</script>
+{% endblock %}

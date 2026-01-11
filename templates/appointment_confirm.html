@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointment Confirmation{% endblock %}
+
+{% block content %}
+<div class="container grid grid-cols-2">
+    <div class="card p-4 flex flex-col justify-center items-center text-center">
+        <h2 style="color: var(--primary-color);">Appointment Confirmed!</h2>
+        <p class="text-medium mt-4">You will receive an email and SMS for confirmation. Thank you for choosing
+            Healteeth!</p>
+        <p class="text-light mt-2">If you have any questions or need to reschedule, feel free to contact us.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary mt-4">Return Home</a>
+    </div>
+
+    <div class="card p-4">
+        <h3>Appointment Summary</h3>
+        <hr class="mb-4" style="border: 0; border-top: 1px solid #e5e7eb;">
+
+        <div style="line-height: 2;">
+            <p><strong>Service:</strong> {{ appointment.service.SERVICE_NAME }}</p>
+            <p><strong>Branch:</strong> {{ appointment.branch.BRANCH_LOC }}</p>
+            <p><strong>Schedule:</strong> {{ appointment.schedule.sched_datetime }}</p>
+            <p><strong>Customer:</strong> {{ appointment.customer.CUST_FNAME }} {{ appointment.customer.CUST_LNAME }}
+            </p>
+            <p><strong>Number of Teeth to Extract:</strong> {{ appointment.numteeth_to_extract }}</p>
+            <p style="font-size: 1.25rem; color: var(--primary-color);"><strong>Total Price:</strong> ₱{{
+                appointment.total_price | round(2) }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

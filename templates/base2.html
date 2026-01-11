@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon/healteeth.png') }}">
+    <title>{{ pagetitle if pagetitle else 'HEALTEETH Admin' }}</title>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <nav class="navbar">
+        <div class="container navbar-content" style="max-width: 100%; padding: 0 2rem;">
+            <a href="{{ url_for('appointments') }}" class="navbar-brand">
+                <img src="{{ url_for('static', filename='images/healteeth.png') }}" alt="HEALTEETH Logo">
+            </a>
+            <div class="navbar-menu">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary"
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">View Site</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div style="padding-left: 1rem; margin-bottom: 1rem; font-weight: bold; color: var(--text-medium);">MENU</div>
+        <a href="{{ url_for('dashboard') }}"
+            class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">Dashboard</a>
+        <a href="{{ url_for('appointments') }}"
+            class="{{ 'active' if request.endpoint == 'appointments' else '' }}">Appointments</a>
+        <a href="{{ url_for('services') }}"
+            class="{{ 'active' if request.endpoint == 'services' else '' }}">Services</a>
+        <a href="{{ url_for('schedules') }}"
+            class="{{ 'active' if request.endpoint == 'schedules' else '' }}">Schedule</a>
+        <a href="{{ url_for('dentists') }}"
+            class="{{ 'active' if request.endpoint == 'dentists' else '' }}">Dentists</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <h2 class="mb-4">{{ pagetitle }}</h2>
+            {% block content %}
+            {% endblock %}
+
+            <footer class="footer" style="margin-top: 4rem;">
+                <p>&copy; 2024 HEALTEETH. All rights reserved.</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        if (!sessionStorage.getItem('loggedIn')) {
+            history.pushState(null, null, location.href);
+            window.onpopstate = () => {
+                history.go(1);
+            };
+        }
+    </script>
+
+</body>
+
+</html>

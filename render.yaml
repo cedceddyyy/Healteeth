@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: healteeth
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    disk:
+      name: healteeth-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DB_PATH
+        value: /data/healteeth.db
+      - key: PYTHON_VERSION
+        value: 3.11.5

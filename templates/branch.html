@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="w3-container w3-padding">
+    <h3>{{ pagetitle }}</h3>
+    <form method="POST" action="/select-schedule"> <!-- This will handle the branch selection -->
+        <div class="w3-row-padding">
+            {% for branch in branches %}
+            <div class="w3-card-4 w3-margin-bottom">
+                <div class="w3-padding">
+                    <h4>{{ branch.BRANCH_LOC }}</h4>
+                    <input type="radio" name="branch_id" value="{{ branch.BRANCH_ID }}" required>
+                    <label>Select this Branch</label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="w3-button w3-blue">Next</button>
+    </form>
+</div>
+{% endblock %}

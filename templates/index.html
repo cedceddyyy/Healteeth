@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="grid grid-cols-1" style="max-width: 900px; margin: 0 auto;">
+    {% for service in services %}
+    <div class="card p-4" id="service-card-{{ service.SERVICE_ID }}">
+        <div class="flex items-center">
+            <div style="flex-shrink: 0; margin-right: var(--spacing-md);">
+                <img src="{{ url_for('static', filename=service.ImagePath) }}" alt="{{ service.SERVICE_NAME }}"
+                    class="card-image" style="width: 120px; height: 120px; margin-bottom: 0;">
+            </div>
+            <div style="flex-grow: 1;">
+                <h3>{{ service.SERVICE_NAME }}</h3>
+                <p class="text-medium mb-4">{{ service.SERVICE_DESC }}</p>
+                <div class="flex items-center justify-between">
+                    <span style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">₱{{
+                        service.SERVICE_PRICE }}</span>
+                    <button class="btn btn-primary" onclick="selectService({{ service.SERVICE_ID }})">Book Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branch Selection (Hidden by Default) -->
+        <div id="branches-{{ service.SERVICE_ID }}" class="mt-4 p-4"
+            style="display: none; background-color: #f9fafb; border-radius: var(--radius-md);">
+            <h5 style="color: var(--text-medium);">Select a Branch:</h5>
+            {% if service.available_branches %}
+            <div class="flex flex-col" style="gap: 0.5rem;">
+                {% for branch in service.available_branches %}
+                <a href="javascript:void(0);" onclick="selectBranch({{ branch.BRANCH_ID }})"
+                    class="btn btn-secondary text-center">
+                    {{ branch.BRANCH_LOC }}
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-danger">This service is not available in any branch.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function selectService(serviceId) {
+        // Toggle branch view or fetch
+        // The original logic fetched /select_service/ID then showed branches.
+        // I'll keep the logic but maybe animate the storage.
+
+        fetch(`/select_service/${serviceId}`, { method: 'POST' })
+            .then(() => {
+                // Hide all others
+                document.querySelectorAll('[id^="branches-"]').forEach(el => el.style.display = 'none');
+
+                const branchDiv = document.getElementById(`branches-${serviceId}`);
+                if (branchDiv) {
+                    branchDiv.style.display = 'block';
+                    // Scroll to it
+                    branchDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+    }
+
+    function selectBranch(branchId) {
+        fetch(`/select_branch/${branchId}`, { method: 'POST' })
+            .then(() => {
+                window.location.href = `/schedule/${branchId}`;
+            });
+    }
+</script>
+{% endblock %}

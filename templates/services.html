@@ -1,0 +1,263 @@
+{% extends "base2.html" %}
+
+{% block content %}
+<div class="container">
+	{% with messages = get_flashed_messages(with_categories=true) %}
+	{% if messages %}
+	{% for category, message in messages %}
+	<div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+		{{ message }}
+	</div>
+	{% endfor %}
+	{% endif %}
+	{% endwith %}
+
+	<div class="flex justify-between items-center mb-4">
+		<div><!-- Spacer or Title Filter --></div>
+		<button onclick="document.getElementById('addServiceModal').style.display='block'" class="btn btn-primary">
+			+ Add New Service
+		</button>
+	</div>
+
+	<!-- Modals -->
+	<!-- Add Service Modal -->
+	<div id="addServiceModal" class="modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Add New Service</h3>
+				<span onclick="document.getElementById('addServiceModal').style.display='none'"
+					class="close">&times;</span>
+			</div>
+			<div class="modal-body">
+				<form action="{{ url_for('add_service') }}" method="POST">
+					<div class="form-group">
+						<label for="service_name" class="form-label">Service Name</label>
+						<input type="text" id="service_name" name="service_name" required class="form-control" />
+					</div>
+
+					<div class="form-group">
+						<label for="service_desc" class="form-label">Description</label>
+						<textarea id="service_desc" name="service_desc" required class="form-control"
+							rows="3"></textarea>
+					</div>
+
+					<div class="form-group">
+						<label for="service_price" class="form-label">Price</label>
+						<input type="number" id="service_price" name="service_price" required class="form-control"
+							step="0.01" />
+					</div>
+
+					<div class="form-group">
+						<label for="service_image" class="form-label">Image Path</label>
+						<input type="text" id="service_image" name="service_image" required class="form-control"
+							placeholder="e.g., images/cleaning.jfif" />
+					</div>
+
+					<button type="submit" class="btn btn-primary">Add Service</button>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Edit Service Modal -->
+	<div id="editServiceModal" class="modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Edit Service</h3>
+				<span onclick="document.getElementById('editServiceModal').style.display='none'"
+					class="close">&times;</span>
+			</div>
+			<div class="modal-body">
+				<form action="{{ url_for('update_service') }}" method="POST">
+					<div class="form-group">
+						<label for="edit_service_name" class="form-label">Service Name</label>
+						<input id="edit_service_name" name="service_name" required class="form-control" readonly
+							style="background-color: #eee;">
+					</div>
+					<div class="form-group">
+						<label for="edit_service_desc" class="form-label">Description</label>
+						<textarea id="edit_service_desc" name="service_desc" required class="form-control"
+							rows="3"></textarea>
+					</div>
+					<div class="form-group">
+						<label for="edit_service_price" class="form-label">Price</label>
+						<input type="number" id="edit_service_price" name="service_price" required class="form-control"
+							step="0.01">
+					</div>
+					<div class="form-group">
+						<label for="edit_service_image" class="form-label">Image Path</label>
+						<input type="text" id="edit_service_image" name="service_image" required class="form-control">
+					</div>
+					<button type="submit" class="btn btn-primary">Save Changes</button>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Branch Management Modal -->
+	<div id="branchModal" class="modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Manage Branches for <span id="serviceName" style="color: var(--primary-color);"></span></h3>
+				<span onclick="document.getElementById('branchModal').style.display='none'" class="close">&times;</span>
+			</div>
+			<div class="modal-body">
+				<form id="branchForm" method="POST">
+					<input type="hidden" id="modal_service_id" name="service_id">
+
+					<div class="grid grid-cols-2">
+						{% for branch in branches %}
+						<div class="p-4" style="background:#f9fafb; border-radius: var(--radius-sm);">
+							<label class="flex items-center" style="cursor: pointer;">
+								<input type="checkbox" name="branches" value="{{ branch.BRANCH_ID }}"
+									class="branch-checkbox" style="margin-right: 0.5rem; transform: scale(1.2);">
+								<span>{{ branch.BRANCH_LOC }}</span>
+							</label>
+						</div>
+						{% endfor %}
+					</div>
+
+					<div class="mt-4 flex justify-between">
+						<button type="button" onclick="document.getElementById('branchModal').style.display='none'"
+							class="btn btn-secondary">Cancel</button>
+						<button type="submit" class="btn btn-primary">Save Changes</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Services Table -->
+	<div class="card p-4 table-container">
+		<table>
+			<thead>
+				<tr>
+					<th>Service Name</th>
+					<th>Description</th>
+					<th>Image</th>
+					<th>Price</th>
+					<th>Available Branches</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for service in services %}
+				<tr>
+					<td style="font-weight: 500;">{{ service.SERVICE_NAME }}</td>
+					<td class="text-medium">{{ service.SERVICE_DESC }}</td>
+					<td><img src="{{ url_for('static', filename=service.ImagePath) }}" alt="Service Image"
+							style="width: 50px; border-radius: 4px;"></td>
+					<td>₱{{ "%.2f"|format(service.SERVICE_PRICE) }}</td>
+					<td>
+						<div>
+							{% if service.available_branches %}
+							{% for branch in service.available_branches %}
+							<span class="tag tag-primary" style="margin-bottom: 2px;">{{ branch.BRANCH_LOC }}</span>
+							{% endfor %}
+							{% else %}
+							<span class="tag tag-danger">No branches</span>
+							{% endif %}
+						</div>
+						<button onclick="openBranchModal('{{ service.SERVICE_ID }}', '{{ service.SERVICE_NAME }}')"
+							class="btn btn-secondary"
+							style="padding: 0.25rem 0.5rem; font-size: 0.8rem; margin-top: 0.5rem;">
+							Manage
+						</button>
+					</td>
+					<td>
+						<div class="flex" style="gap: 0.5rem;">
+							<button
+								onclick="openEditModal('{{ service.SERVICE_NAME }}', '{{ service.SERVICE_DESC }}', '{{ service.SERVICE_PRICE }}', '{{ service.ImagePath }}')"
+								class="btn btn-primary" style="padding: 0.5rem;">
+								<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0id2hpdGUiIGNsYXNzPSJiaSBiaS1wZW5jaWwiIHZpZXdCb3g9IjAgMCAxNiAxNiI+CiAgPHBhdGggZD0iTTEyLjE0Ni4xNDZhLjUuNSAwIDAgMSAgLjcwOCAwWjMuODU0IDMuODU0YTEyLjUgMTIuNSAwIDAgMSAwIDEwLjg1NGwyLjY0NiAyLjY0NmEuNS41IDAgMCAxIC43MDguNzA4TDE1Ljg1NCAyLjM1NGEuNS41IDAgMCAxIC43NjgtLjcwOGwtMi42NDYtMi42NDd6Ii8+CiAgPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNMSAyLjUgMjEuNSAyMS41Ii8+Cjwvc3ZnPg=="
+									alt="Edit" style="width:16px;"> Edit
+							</button>
+
+							<form action="{{ url_for('delete_service', service_name=service.SERVICE_NAME) }}"
+								method="POST" style="display:inline;">
+								<button type="submit" class="btn btn-danger"
+									onclick="return confirm('Are you sure you want to delete this service?');"
+									style="padding: 0.5rem;">
+									Delete
+								</button>
+							</form>
+						</div>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+<script>
+	// Open Edit Modal and Populate Fields
+	function openEditModal(name, desc, price, image) {
+		document.getElementById('edit_service_name').value = name;
+		document.getElementById('edit_service_desc').value = desc;
+		document.getElementById('edit_service_price').value = price;
+		document.getElementById('edit_service_image').value = image;
+		document.getElementById('editServiceModal').style.display = 'block';
+	}
+
+	async function openBranchModal(serviceId, serviceName) {
+		document.getElementById('modal_service_id').value = serviceId;
+		document.getElementById('serviceName').textContent = serviceName;
+
+		document.querySelectorAll('.branch-checkbox').forEach(cb => cb.checked = false);
+
+		try {
+			const response = await fetch(`/get_service_branches/${serviceId}`);
+			if (!response.ok) throw new Error('Failed to fetch branches');
+
+			const branches = await response.json();
+
+			branches.forEach(branch => {
+				const checkbox = document.querySelector(`input[value="${branch.BRANCH_ID}"]`);
+				if (checkbox) checkbox.checked = true;
+			});
+
+			document.getElementById('branchModal').style.display = 'block';
+		} catch (error) {
+			console.error('Error:', error);
+			alert('Failed to load branch data');
+		}
+	}
+
+	// Close modals when clicking outside
+	window.onclick = function (event) {
+		if (event.target.classList.contains('modal')) {
+			event.target.style.display = "none";
+		}
+	}
+
+	document.getElementById('branchForm').onsubmit = async function (e) {
+		e.preventDefault();
+
+		const serviceId = document.getElementById('modal_service_id').value;
+		const checkedBranches = Array.from(document.querySelectorAll('.branch-checkbox:checked'))
+			.map(cb => cb.value);
+
+		try {
+			const response = await fetch('/update_service_branches', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					service_id: serviceId,
+					branch_ids: checkedBranches
+				})
+			});
+
+			if (!response.ok) throw new Error('Failed to update branches');
+
+			document.getElementById('branchModal').style.display = 'none';
+			location.reload();
+		} catch (error) {
+			console.error('Error:', error);
+			alert('Failed to update branches');
+		}
+	};
+</script>
+{% endblock %}

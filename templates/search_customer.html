@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Search for an Existing Customer</h2>
+    <form method="POST" action="{{ url_for('process_old_user') }}">
+        <label for="first_name">First Name:</label>
+        <input type="text" class="w3-input w3-border" name="first_name" required><br><br>
+        <label for="last_name">Last Name:</label>
+        <input type="text" class="w3-input w3-border" name="last_name" required><br><br>
+        <input type="hidden" name="branch_id" value="{{ branch_id }}">
+        <button type="submit" class="w3-button w3-indigo w3-block">Search</button>
+    </form>
+{% endblock %}

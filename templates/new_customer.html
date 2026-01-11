@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="w3-card-4 w3-margin w3-white w3-padding w3-round">
+    <h3>New Customer Details</h3>
+    <form method="POST">
+        <label for="first_name">First Name:</label>
+        <input type="text" id="first_name" name="first_name" class="w3-input w3-border" placeholder="Enter First Name" required>
+        
+        <label for="last_name" class="w3-margin-top">Last Name:</label>
+        <input type="text" id="last_name" name="last_name" class="w3-input w3-border" placeholder="Enter Last Name" required>
+        
+        <label for="email" class="w3-margin-top">Email:</label>
+        <input type="email" id="email" name="email" class="w3-input w3-border" placeholder="Enter Email Address" required>
+        
+        <label for="phone" class="w3-margin-top">Phone Number:</label>
+        <input type="text" id="phone" name="phone" class="w3-input w3-border" placeholder="Enter Phone Number" required>
+        
+        <button type="submit" class="w3-button w3-green w3-margin-top">Submit</button>
+    </form>
+</div>
+{% endblock %}

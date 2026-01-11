@@ -1,0 +1,145 @@
+{% extends "base2.html" %}
+
+{% block content %}
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Branch Buttons -->
+    <div class="mb-4 flex flex-wrap" style="gap: 0.5rem;">
+        {% for branch in branches %}
+        <a href="{{ url_for('appointments', branch_id=branch['BRANCH_ID']) }}"
+            class="btn {{ 'btn-primary' if branch['BRANCH_ID'] == selected_branch else 'btn-secondary' }}">
+            {{ branch['BRANCH_LOC'] }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pending Appointments Table -->
+    <h3 class="mt-4 mb-4" style="color: var(--warning-color);">Pending Appointments</h3>
+    {% if pending_appointments %}
+    <div class="card p-4 table-container mb-4">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Service</th>
+                    <th>Branch</th>
+                    <th>Customer</th>
+                    <th>Schedule</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in pending_appointments %}
+                <tr>
+                    <td>{{ appointment['APPOINT_ID'] }}</td>
+                    <td>{{ appointment['SERVICE_NAME'] }}</td>
+                    <td>{{ appointment['BRANCH_NAME'] }}</td>
+                    <td>{{ appointment['CUST_FNAME'] }} {{ appointment['CUST_LNAME'] }}</td>
+                    <td>{{ appointment['SCHED_DATETIME'] }}</td>
+                    <td><span class="tag tag-warning">{{ appointment['APPROVAL_STATUS'] }}</span></td>
+                    <td>
+                        <div class="flex" style="gap: 0.5rem;">
+                            <form action="{{ url_for('approve_appointment', appoint_id=appointment['APPOINT_ID']) }}"
+                                method="POST" style="display: inline-block;">
+                                <button type="submit" class="btn btn-primary"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    Approve
+                                </button>
+                            </form>
+                            <form action="{{ url_for('disapprove_appointment', appoint_id=appointment['APPOINT_ID']) }}"
+                                method="POST" style="display: inline-block;">
+                                <button type="submit" class="btn btn-danger"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    Reject
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-error">No pending appointments.</div>
+    {% endif %}
+
+    <!-- Approved Appointments Table -->
+    <h3 class="mt-4 mb-4" style="color: var(--success-color);">Approved Appointments</h3>
+    {% if approved_appointments %}
+    <div class="card p-4 table-container mb-4">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Service</th>
+                    <th>Branch</th>
+                    <th>Customer</th>
+                    <th>Schedule</th>
+                    <th>Status</th>
+                    <th>Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in approved_appointments %}
+                <tr>
+                    <td>{{ appointment['APPOINT_ID'] }}</td>
+                    <td>{{ appointment['SERVICE_NAME'] }}</td>
+                    <td>{{ appointment['BRANCH_NAME'] }}</td>
+                    <td>{{ appointment['CUST_FNAME'] }} {{ appointment['CUST_LNAME'] }}</td>
+                    <td>{{ appointment['SCHED_DATETIME'] }}</td>
+                    <td><span class="tag tag-success">{{ appointment['APPROVAL_STATUS'] }}</span></td>
+                    <td>₱{{ "%.2f"|format(appointment['TOTAL_PRICE']) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert" style="background-color: #f9fafb;">No approved appointments.</div>
+    {% endif %}
+
+    <!-- Disapproved Appointments Table -->
+    <h3 class="mt-4 mb-4" style="color: var(--danger-color);">Disapproved Appointments</h3>
+    {% if disapproved_appointments %}
+    <div class="card p-4 table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Service</th>
+                    <th>Branch</th>
+                    <th>Customer</th>
+                    <th>Schedule</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in disapproved_appointments %}
+                <tr>
+                    <td>{{ appointment['APPOINT_ID'] }}</td>
+                    <td>{{ appointment['SERVICE_NAME'] }}</td>
+                    <td>{{ appointment['BRANCH_NAME'] }}</td>
+                    <td>{{ appointment['CUST_FNAME'] }} {{ appointment['CUST_LNAME'] }}</td>
+                    <td>{{ appointment['SCHED_DATETIME'] }}</td>
+                    <td><span class="tag tag-danger">{{ appointment['APPROVAL_STATUS'] }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert" style="background-color: #f9fafb;">No disapproved appointments.</div>
+    {% endif %}
+</div>
+{% endblock %}

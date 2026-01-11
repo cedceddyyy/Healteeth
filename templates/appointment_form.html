@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <div class="card p-4">
+        <h3>Appointment Summary</h3>
+        <hr class="mb-4" style="border: 0; border-top: 1px solid #e5e7eb;">
+
+        <div class="mb-4">
+            <p><strong>Service:</strong> {{ selected_service.SERVICE_NAME if selected_service else 'Not Selected' }}</p>
+            <p><strong>Service Price:</strong> ₱{{ selected_service.SERVICE_PRICE if selected_service else 'Not
+                Selected' }}</p>
+            <p><strong>Branch:</strong> {{ selected_branch['BRANCH_LOC'] if selected_branch and 'BRANCH_LOC' in
+                selected_branch else 'Not Selected' }}</p>
+            <p><strong>Schedule:</strong> {{ selected_schedule['sched_datetime'] if selected_schedule and
+                'sched_datetime' in selected_schedule else 'Not Selected' }}</p>
+            <p><strong>Customer:</strong> {{ customer_data.CUST_FNAME if customer_data else 'Not Provided' }}</p>
+        </div>
+
+
+        <form id="confirmForm" action="{{ url_for('confirm_appointment') }}" method="POST">
+            {% if selected_service and 'extraction' in selected_service.SERVICE_NAME.lower() %}
+            <div class="form-group">
+                <label for="numteeth_to_extract" class="form-label">Number of Teeth to Extract:</label>
+                <input type="number" name="numteeth_to_extract" id="numteeth_to_extract" class="form-control" min="1"
+                    max="20" value="1" required>
+            </div>
+            {% endif %}
+            <button type="button" class="btn btn-primary btn-block" id="openConfirmModal">Confirm Appointment</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4>Confirm Appointment</h4>
+            <span onclick="document.getElementById('confirmModal').style.display='none'" class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to confirm this appointment?</p>
+            <div class="mt-4 flex justify-between">
+                <button class="btn btn-secondary"
+                    onclick="document.getElementById('confirmModal').style.display='none'">Cancel</button>
+                <button class="btn btn-primary" id="confirmButton">Yes, Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('openConfirmModal').addEventListener('click', function () {
+        document.getElementById('confirmModal').style.display = 'block';
+    });
+
+    document.getElementById('confirmButton').addEventListener('click', function () {
+        document.getElementById('confirmForm').submit();
+    });
+</script>
+{% endblock %}

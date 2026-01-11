@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon/healteeth.png') }}">
+    <title>{{ pagetitle if pagetitle else 'HEALTEETH' }}</title>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="{{ url_for('index') }}" class="navbar-brand">
+                <img src="{{ url_for('static', filename='images/healteeth.png') }}" alt="HEALTEETH Logo">
+            </a>
+            <div class="navbar-menu">
+                <!-- Add menu items here if needed, currently main nav is on index or separate for admin -->
+                <span style="font-weight: 600; font-size: 1.2rem; color: var(--primary-color);">Welcome to
+                    Healteeth</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="mt-4 mb-4 text-center">
+            {% if pagetitle %}
+            <h2>{{ pagetitle }}</h2>
+            {% endif %}
+        </div>
+
+        {% block content %}
+        {% endblock %}
+
+        <footer class="footer">
+            <p>&copy; 2024 HEALTEETH. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+
+</html>

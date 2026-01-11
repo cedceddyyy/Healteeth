@@ -1,0 +1,180 @@
+{% extends 'base2.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="flex items-center justify-between mb-4">
+        <h2 style="color: var(--primary-color);">Dashboard Overview</h2>
+        <span class="text-medium">{{ stats['monthly_revenue'].get(13, '') }}</span>
+        <!-- Placeholder for date if needed -->
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="grid grid-cols-3 mb-4">
+        <!-- Revenue Card -->
+        <div class="card p-4 flex flex-col justify-between" style="border-left: 4px solid var(--success-color);">
+            <h5 class="text-medium">Total Revenue</h5>
+            <div class="flex items-center mt-2">
+                <span style="font-size: 2rem; font-weight: 700; color: var(--text-dark);">₱{{
+                    "%.2f"|format(stats['total_revenue']) }}</span>
+            </div>
+        </div>
+
+        <!-- Approved Appointments Card -->
+        <div class="card p-4 flex flex-col justify-between" style="border-left: 4px solid var(--primary-color);">
+            <h5 class="text-medium">Approved Appointments</h5>
+            <div class="flex items-center mt-2">
+                <span style="font-size: 2rem; font-weight: 700; color: var(--text-dark);">{{
+                    stats['status_counts']['Approved'] }}</span>
+            </div>
+        </div>
+
+        <!-- Pending Appointments Card -->
+        <div class="card p-4 flex flex-col justify-between" style="border-left: 4px solid var(--warning-color);">
+            <h5 class="text-medium">Pending Appointments</h5>
+            <div class="flex items-center mt-2">
+                <span style="font-size: 2rem; font-weight: 700; color: var(--text-dark);">{{
+                    stats['status_counts']['Pending'] }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1: Monthly Revenue & Status Distribution -->
+    <div class="grid grid-cols-2 mb-4">
+        <div class="card p-4">
+            <h4 class="mb-4">Monthly Revenue</h4>
+            <canvas id="revenueChart"></canvas>
+        </div>
+        <div class="card p-4">
+            <h4 class="mb-4">Appointment Status</h4>
+            <div style="max-height: 300px; display: flex; justify-content: center;">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2: Top Services -->
+    <div class="card p-4 mb-4">
+        <h4 class="mb-4">Most Popular Services</h4>
+        <canvas id="servicesChart" height="100"></canvas>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="grid grid-cols-2 mt-4" style="gap: var(--spacing-lg);">
+        <a href="{{ url_for('appointments') }}"
+            class="card p-4 shadow-sm hover:shadow-md flex items-center justify-between"
+            style="text-decoration: none; border: 1px solid #e5e7eb;">
+            <div>
+                <h4 style="margin-bottom: 0;">Manage Appointments</h4>
+                <p class="text-light">View and approve bookings</p>
+            </div>
+            <i class="material-icons" style="color: var(--primary-color);">arrow_forward</i>
+        </a>
+        <a href="{{ url_for('schedules') }}"
+            class="card p-4 shadow-sm hover:shadow-md flex items-center justify-between"
+            style="text-decoration: none; border: 1px solid #e5e7eb;">
+            <div>
+                <h4 style="margin-bottom: 0;">Manage Schedules</h4>
+                <p class="text-light">Update doctor availability</p>
+            </div>
+            <i class="material-icons" style="color: var(--primary-color);">arrow_forward</i>
+        </a>
+    </div>
+
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Data from Flask
+    const monthlyRevenueData = {{ stats['monthly_revenue'] | tojson }};
+    const statusCountsData = {{ stats['status_counts'] | tojson }};
+    const topServicesData = {{ stats['top_services'] | tojson }};
+
+    // 1. Revenue Chart (Line or Bar)
+    const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+    const revenueLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const revenueValues = Object.values(monthlyRevenueData);
+
+    new Chart(ctxRevenue, {
+        type: 'line',
+        data: {
+            labels: revenueLabels,
+            datasets: [{
+                label: 'Revenue (PHP)',
+                data: revenueValues,
+                borderColor: '#023e8a', // primary-dark
+                backgroundColor: 'rgba(144, 224, 239, 0.2)', // primary-light transparent
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) { return '₱' + value; }
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Status Chart (Doughnut)
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(statusCountsData),
+            datasets: [{
+                data: Object.values(statusCountsData),
+                backgroundColor: [
+                    '#f59e0b', // Pending - warning
+                    '#10b981', // Approved - success
+                    '#ef4444'  // Disapproved - danger
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // 3. Services Chart (Bar)
+    const ctxServices = document.getElementById('servicesChart').getContext('2d');
+    new Chart(ctxServices, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(topServicesData),
+            datasets: [{
+                label: 'Bookings',
+                data: Object.values(topServicesData),
+                backgroundColor: '#0077b6', // primary-color
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y', // Horizontal bar
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
