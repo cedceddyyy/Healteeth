@@ -40,6 +40,9 @@
             class="{{ 'active' if request.endpoint == 'schedules' else '' }}">Schedule</a>
         <a href="{{ url_for('dentists') }}"
             class="{{ 'active' if request.endpoint == 'dentists' else '' }}">Dentists</a>
+        <div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
+            <a href="{{ url_for('logout') }}" style="color: #dc3545;">Logout</a>
+        </div>
     </div>
 
     <!-- Main Content -->

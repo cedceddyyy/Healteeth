@@ -43,6 +43,12 @@ def login():
 
     return render_template('login.html')
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
+
 @app.route('/select_service/<int:service_id>', methods=['POST'])
 def select_service(service_id):
     session['selected_service'] = next(
