@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response
+from functools import wraps
 from dbhelper import (
     get_all_services, get_all_branches, get_schedules_by_branch, get_customer_by_name,
     insert_new_customer, update_customer_in_db, get_user, get_appointments_by_branch,
@@ -25,6 +26,22 @@ app = Flask(__name__)
 app.secret_key = 'database123@#$'
 app.secret_key = 'database123@#$'
 
+# Login Required Decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please login to access this page.', 'error')
+            return redirect(url_for('login'))
+        
+        # Add headers to prevent caching
+        response = make_response(f(*args, **kwargs))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    return decorated_function
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -35,7 +52,6 @@ def login():
         
         if user:
             session['user_id'] = user['USER_ID']
-            flash('Login successful!', 'success')
             return redirect(url_for('dashboard', branch_id=1))  
         else:
             flash('Invalid username or password', 'error')
@@ -44,10 +60,15 @@ def login():
     return render_template('login.html')
 
 @app.route('/logout')
+@app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('login'))
+    response = make_response(redirect(url_for('login')))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/select_service/<int:service_id>', methods=['POST'])
 def select_service(service_id):
@@ -316,6 +337,7 @@ def confirm_appointment():
 # FOR ADMIN/DENTIST/STAFF
 @app.route('/appointments', defaults={'branch_id': None})
 @app.route('/appointments/<int:branch_id>')
+@login_required
 def appointments(branch_id):
     branches = get_all_branches()
     pending_appointments = []
@@ -338,6 +360,7 @@ def appointments(branch_id):
     )
 
 @app.route('/services')
+@login_required
 def services():
     services = get_all_services()
     branches = get_all_branches()
@@ -353,6 +376,7 @@ def services():
 
 @app.route('/schedules', defaults={'branch_id': None})
 @app.route('/schedules/<int:branch_id>')
+@login_required
 def schedules(branch_id):
     schedules = []  
     inactive_schedules = []
@@ -370,16 +394,19 @@ def schedules(branch_id):
     )
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
     stats = get_dashboard_stats()
     return render_template('dashboard.html', pagetitle="Dashboard", stats=stats)
 
 @app.route('/dentists')
+@login_required
 def dentists():
     dentists_list = get_all_dentists()
     return render_template('dentists.html', pagetitle="Dentists", dentists=dentists_list)
     
 @app.route('/add_service', methods=['POST'])
+@login_required
 def add_service():
     service_name = request.form['service_name']
     service_desc = request.form['service_desc']
@@ -392,6 +419,7 @@ def add_service():
     return redirect(url_for('services'))
     
 @app.route('/update_service', methods=['POST'])
+@login_required
 def update_service():
     service_name = request.form['service_name']
     service_desc = request.form['service_desc']
@@ -405,12 +433,14 @@ def update_service():
 
 
 @app.route('/delete_service/<string:service_name>', methods=['POST'])
+@login_required
 def delete_service(service_name):
     delete_service_in_db(service_name)
     flash('Service deleted successfully!', 'success')
     return redirect(url_for('services'))
 
 @app.route('/add_schedule', methods=['POST'])
+@login_required
 def add_schedule():
     branch_id = request.form['branch_id']
     schedule_date = request.form['schedule_date']
@@ -422,6 +452,7 @@ def add_schedule():
     return redirect(url_for('schedules', branch_id=branch_id))  
     
 @app.route('/update_schedule', methods=['POST'])
+@login_required
 def update_schedule():
     try:
         schedule_id = request.form['schedule_id']
@@ -436,6 +467,7 @@ def update_schedule():
         return redirect(url_for('schedules'))
 
 @app.route('/delete_schedule/<int:schedule_id>', methods=['POST'])
+@login_required
 def delete_schedule(schedule_id):
     try:
         delete_schedule_in_db(schedule_id)
@@ -444,6 +476,7 @@ def delete_schedule(schedule_id):
         return str(e), 500
 
 @app.route('/approve_appointment/<int:appoint_id>', methods=['POST'])
+@login_required
 def approve_appointment(appoint_id):
     try:
         update_appointment_approval_status(appoint_id, 'Approved')
@@ -453,6 +486,7 @@ def approve_appointment(appoint_id):
     return redirect(url_for('appointments'))
 
 @app.route('/disapprove_appointment/<int:appoint_id>', methods=['POST'])
+@login_required
 def disapprove_appointment(appoint_id):
     try:
         update_appointment_approval_status(appoint_id, 'Disapproved')
@@ -462,11 +496,13 @@ def disapprove_appointment(appoint_id):
     return redirect(url_for('appointments'))
 
 @app.route('/get_service_branches/<int:service_id>')
+@login_required
 def get_service_branches(service_id):
     branches = get_branches_by_service(service_id)
     return jsonify(branches)
 
 @app.route('/update_service_branches', methods=['POST'])
+@login_required
 def update_service_branches():
     data = request.get_json()
     service_id = data['service_id']
